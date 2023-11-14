@@ -1,0 +1,47 @@
+#include <SoftwareSerial.h>  // Для взаимодействия с принтером чеков
+#include <Wire.h>           // Для взаимодействия с магнитами через реле
+
+SoftwareSerial printerSerial(10, 11);  // RX, TX соединения с принтером чеков
+const int relayPin = 9;                 // Пин, к которому подключено реле для управления магнитами
+const String expectedBarcode = "123456"; // Ожидаемый штрих-код
+
+void setup() {
+  Serial.begin(9600);
+  printerSerial.begin(9600);
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, HIGH); // Начальное состояние магнитов - заблокировано
+}
+
+void loop() {
+  String scannedBarcode = readBarcode();
+  
+  if (scannedBarcode == expectedBarcode) {
+    openDoor();
+    delay(5000); // Задержка для того, чтобы дать времени пройти через дверь
+    closeDoor();
+  } else {
+    Serial.println("Неверный штрих-код. Дверь не откроется.");
+  }
+}
+
+String readBarcode() {
+  Serial.println("Пожалуйста, просканируйте штрих-код:");
+  
+  while (!Serial.available()) {
+    // Ждем, пока появятся данные
+  }
+  String barcode = Serial.readString();
+  Serial.println("Прочитанный штрих-код: " + barcode);
+  return barcode;
+}
+
+void openDoor() {
+  Serial.println("Открываем дверь...");
+  digitalWrite(relayPin, LOW); // Реле включается, магниты расслабляются
+  delay(1000); // Задержка для обеспечения стабильного расслабления магнитов
+}
+
+void closeDoor() {
+  Serial.println("Закрываем дверь...");
+  digitalWrite(relayPin, HIGH); // Реле выключается, магниты становятся сильными
+}
